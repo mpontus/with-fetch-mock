@@ -1,0 +1,9 @@
+{
+  "name": "with-fetch-mock",
+  "version": "0.1.0",
+  "description": "Library for mocking requests in scoped manner",
+  "main": "index.js",
+  "repository": "https://github.com/mpontus/with-fetch-mock",
+  "author": "Michael Pontus",
+  "license": "MIT"
+}
