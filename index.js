@@ -3,56 +3,41 @@ const fetchMock = require('fetch-mock');
 const createWithMock = ({
     Promise = window.Promise,
 } = {}) => {
-    const setupMock = (mock) => new Promise((resolve, reject) => {
-        const callback = typeof mock === 'function' ? mock : () => mock;
-
+    // Register mock with fetch-mock to be executed once
+    const setupMock = (callback) => new Promise((resolve, reject) => {
         fetchMock.once('*', (...args) => {
+            const result = callback(...args);
+
+            result.then(resolve, reject);
+
+            return result;
+        });
+    });
+
+    // Normalize mock to be a function that returns promise
+    const normalizeMock = (value) => {
+        const callback = typeof value === 'function' ? value : () => value;
+
+        return (...args) => {
             let result;
 
             try {
                 result = callback(...args);
             } catch (error) {
-                reject(error);
-
                 return Promise.reject(error);
             }
 
             if (result instanceof Promise) {
-                result.then(resolve, reject);
-
                 return result;
             }
 
-            resolve();
-
             return Promise.resolve(result);
-        });
-    });
+        };
+    };
 
     return (scenario, ...mocks) => {
-        const mockPromise = Promise.all(mocks.map(setupMock));
-        const scenarioPromise = new Promise((resolve, reject) => {
-            let result;
-            try {
-                result = scenario();
-            } catch (error) {
-                reject(error);
-
-                return;
-            }
-
-            if (result instanceof Promise) {
-                result.then(() => {
-                    resolve();
-                }, (error) => {
-                    reject(error);
-                });
-
-                return;
-            }
-
-            resolve();
-        });
+        const mockPromise = Promise.all(mocks.map(normalizeMock).map(setupMock));
+        const scenarioPromise = normalizeMock(scenario)();
 
         return Promise.all([scenarioPromise, mockPromise]);
     };
