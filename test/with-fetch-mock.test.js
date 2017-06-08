@@ -17,19 +17,6 @@ process.on("unhandledRejection", function(reason, promise) {
 const wrap = (asyncFn) => (...args) => new Promise((resolve, reject) =>
     asyncFn(...args).then(resolve, reject));
 
-// TODO: not needed?
-const afterDelay = (cb) => new Promise(
-    (resolve, reject) => {
-        setTimeout(() => {
-            try {
-                cb();
-                resolve();
-            } catch (error) {
-                reject(error);
-            }
-        }, 100);
-    }
-);
 
 it('must resolve after scenario finishes', () => {
     let release;
